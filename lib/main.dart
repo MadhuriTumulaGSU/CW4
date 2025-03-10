@@ -21,12 +21,14 @@ class Plan {
   String description;
   DateTime date;
   bool isCompleted;
+  String priority;
 
   Plan({
     required this.name,
     required this.description,
     required this.date,
     this.isCompleted = false,
+    this.priority = 'Normal',
   });
 }
 
@@ -41,15 +43,15 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
 
   DateTime _selectedDate = DateTime.now();
 
-  void _addPlan(String name, String description, DateTime date) {
+  void _addPlan(String name, String description, DateTime date, String priority) {
     setState(() {
-      Plan newPlan = Plan(name: name, description: description, date: date);
+      Plan newPlan = Plan(name: name, description: description, date: date, priority: priority);
       plans.add(newPlan);
       plansByDate.putIfAbsent(date, () => []).add(newPlan);
     });
   }
 
-  void _updatePlan(int index, String name, String description, DateTime date) {
+  void _updatePlan(int index, String name, String description, DateTime date, String priority) {
     setState(() {
       Plan oldPlan = plans[index];
       plans[index] = Plan(
@@ -57,6 +59,7 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
         description: description,
         date: date,
         isCompleted: oldPlan.isCompleted,
+        priority: priority,
       );
     });
   }
@@ -78,6 +81,7 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
     String name = index != null ? plans[index].name : '';
     String description = index != null ? plans[index].description : '';
     DateTime date = index != null ? plans[index].date : _selectedDate;
+    String priority = index != null ? plans[index].priority : 'Normal';
 
     TextEditingController nameController = TextEditingController(text: name);
     TextEditingController descriptionController = TextEditingController(text: description);
@@ -115,6 +119,21 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
                   }
                 },
               ),
+              DropdownButton<String>(
+                value: priority,
+                items: ['High', 'Normal', 'Low']
+                    .map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    priority = newValue!;
+                  });
+                },
+              ),
             ],
           ),
           actions: [
@@ -125,9 +144,9 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
             TextButton(
               onPressed: () {
                 if (index == null) {
-                  _addPlan(nameController.text, descriptionController.text, date);
+                  _addPlan(nameController.text, descriptionController.text, date, priority);
                 } else {
-                  _updatePlan(index, nameController.text, descriptionController.text, date);
+                  _updatePlan(index, nameController.text, descriptionController.text, date, priority);
                 }
                 Navigator.pop(context);
               },
@@ -202,6 +221,12 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
                         ),
                       ),
                       subtitle: Text(plan.description),
+                      trailing: Text(
+                        plan.priority,
+                        style: TextStyle(
+                          color: plan.priority == 'High' ? Colors.red : plan.priority == 'Low' ? Colors.blue : Colors.black,
+                        ),
+                      ),
                       onLongPress: () => _showPlanDialog(index: index),
                       onTap: () => _toggleCompletion(index),
                     ),
